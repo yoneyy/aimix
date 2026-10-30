@@ -171,18 +171,29 @@ func buildAnthropicParams(model aimix.Model, tc aimix.TranscriptContext, opts An
 		params.Tools = tools
 	}
 
-	switch opts.ToolChoice {
-	case aimix.ToolChoiceAuto:
-		params.ToolChoice = anthropic.ToolChoiceUnionParam{
-			OfAuto: &anthropic.ToolChoiceAutoParam{},
-		}
-	case aimix.ToolChoiceNone:
+	// Anthropic expresses ParallelToolCalls as tool_choice.disable_parallel_tool_use,
+	// and only accepts tool_choice together with tools.
+	noParallel := len(params.Tools) > 0 && opts.ParallelToolCalls != nil && !*opts.ParallelToolCalls
+	switch {
+	case opts.ToolChoice == aimix.ToolChoiceNone:
 		params.ToolChoice = anthropic.ToolChoiceUnionParam{
 			OfNone: &anthropic.ToolChoiceNoneParam{},
 		}
-	case aimix.ToolChoiceRequired:
+	case opts.ToolChoice == aimix.ToolChoiceRequired:
+		choice := anthropic.ToolChoiceAnyParam{}
+		if noParallel {
+			choice.DisableParallelToolUse = anthropic.Bool(true)
+		}
 		params.ToolChoice = anthropic.ToolChoiceUnionParam{
-			OfAny: &anthropic.ToolChoiceAnyParam{},
+			OfAny: &choice,
+		}
+	case opts.ToolChoice == aimix.ToolChoiceAuto || noParallel:
+		choice := anthropic.ToolChoiceAutoParam{}
+		if noParallel {
+			choice.DisableParallelToolUse = anthropic.Bool(true)
+		}
+		params.ToolChoice = anthropic.ToolChoiceUnionParam{
+			OfAuto: &choice,
 		}
 	}
 

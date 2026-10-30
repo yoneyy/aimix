@@ -169,6 +169,10 @@ func buildResponsesParams(model aimix.Model, tc aimix.TranscriptContext, opts Op
 			OfToolChoiceMode: openaiparam.NewOpt(mode),
 		}
 	}
+	// parallel_tool_calls is only accepted together with tools.
+	if opts.ParallelToolCalls != nil && len(params.Tools) > 0 {
+		params.ParallelToolCalls = openai.Bool(*opts.ParallelToolCalls)
+	}
 
 	effort := opts.ReasoningEffort
 	if effort == "" && opts.ReasoningSummary != "" {

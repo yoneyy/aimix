@@ -170,6 +170,10 @@ func buildCompletionsParams(model aimix.Model, tc aimix.TranscriptContext, opts 
 			OfAuto: openai.String(choice),
 		}
 	}
+	// parallel_tool_calls is only accepted together with tools.
+	if opts.ParallelToolCalls != nil && len(params.Tools) > 0 {
+		params.ParallelToolCalls = openai.Bool(*opts.ParallelToolCalls)
+	}
 
 	if model.Reasoning && opts.ReasoningEffort != "" && !model.Compat.NoReasoningEffort {
 		params.ReasoningEffort = shared.ReasoningEffort(opts.ReasoningEffort)

@@ -41,6 +41,10 @@ type StreamOptions struct {
 	SessionID string
 	// ToolChoice is empty for the provider default (auto).
 	ToolChoice ToolChoice
+	// ParallelToolCalls allows (true) or forbids (false) several tool calls in
+	// one turn. Nil leaves the provider default, which allows them. It is only
+	// sent when the request has tools.
+	ParallelToolCalls *bool
 	// MaxRetries is passed to the SDK. The default 0 leaves retrying to the caller.
 	MaxRetries int
 	// HTTPClient sends the requests. Nil uses http.DefaultClient.

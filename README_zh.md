@@ -430,6 +430,7 @@ for {
 
 - `ToolCallContent.Arguments` 是一个 JSON 对象（`json.RawMessage`）。模型给出的参数不是合法对象时，`Arguments` 为 `{}`，`ArgumentsError` 会说明原因并附上模型的原始输出。
 - `StreamOptions.ToolChoice` 可以设为 `ToolChoiceAuto`、`ToolChoiceNone` 或 `ToolChoiceRequired`。
+- 模型一轮里可能返回多个工具调用，要逐个处理每个 `ToolCallContent`。如果希望每轮最多只调用一个工具，把 `StreamOptions.ParallelToolCalls` 设为 `false`：OpenAI 会收到 `parallel_tool_calls: false`，Anthropic 会收到 `tool_choice.disable_parallel_tool_use: true`。
 - 工具结果可以包含图片（`ImageContent`），各协议会按自己支持的方式发送。
 - 没有结果的工具调用会被自动补一条错误结果（"No result provided"），循环中途被打断也不会产生不合法的对话记录。
 
@@ -516,10 +517,23 @@ second, _ := client.CompleteSimple(ctx, gpt, conv, opts)
 | `CacheRetention` | `CacheRetentionShort`（默认）、`CacheRetentionLong`、`CacheRetentionNone` |
 | `SessionID` | Prompt 缓存键（OpenAI） |
 | `ToolChoice` | `auto`、`none` 或 `required` |
+| `ParallelToolCalls` | `*bool`。`false` 表示每轮最多调用一个工具，`true` 表示允许多个；nil 保持厂商默认（允许多个）。只在请求带工具时发送 |
 | `MaxRetries` | 请求失败时 SDK 的重试次数，默认 0，即重试交给调用方 |
 | `HTTPClient` | 自定义 `*http.Client`（代理、超时、链路追踪等） |
 
 `aimix.SimpleStreamOptions` 内嵌 `StreamOptions`，另外增加了 `Reasoning` 和 `ThinkingBudgets`。
+
+指针类型的选项可以直接用 `new` 写在一行里（Go 1.26+）：
+
+```go
+opts := aimix.SimpleStreamOptions{
+	StreamOptions: aimix.StreamOptions{
+		Temperature:       new(0.2),
+		ParallelToolCalls: new(false),
+	},
+	Reasoning: aimix.ThinkingLow,
+}
+```
 
 ### 协议专属选项
 

@@ -420,6 +420,7 @@ Notes:
 
 - `ToolCallContent.Arguments` is a `json.RawMessage` holding a JSON object. If the model's arguments were not a valid object, `Arguments` is `{}` and `ArgumentsError` explains why and quotes what the model sent.
 - `StreamOptions.ToolChoice` can be `ToolChoiceAuto`, `ToolChoiceNone` or `ToolChoiceRequired`.
+- Models may return several tool calls in one turn; handle every `ToolCallContent`. To allow at most one call per turn, set `StreamOptions.ParallelToolCalls` to `false`. OpenAI receives `parallel_tool_calls: false`; Anthropic receives `tool_choice.disable_parallel_tool_use: true`.
 - Tool results may contain images (`ImageContent`). Each protocol sends them in the form it supports.
 - A tool call left without a result gets an automatic error result ("No result provided"), so an interrupted loop never produces an invalid transcript.
 
@@ -501,10 +502,23 @@ Your stored transcript is never modified.
 | `CacheRetention` | `CacheRetentionShort` (default), `CacheRetentionLong`, `CacheRetentionNone` |
 | `SessionID` | Prompt cache key (OpenAI) |
 | `ToolChoice` | `auto`, `none` or `required` |
+| `ParallelToolCalls` | `*bool`. `false` allows at most one tool call per turn, `true` allows several. Nil leaves the provider default (several allowed). Only sent when the request has tools |
 | `MaxRetries` | SDK retries for failed requests. The default of 0 leaves retrying to you |
 | `HTTPClient` | Custom `*http.Client` (proxies, timeouts, tracing) |
 
 `aimix.SimpleStreamOptions` embeds `StreamOptions` and adds `Reasoning` and `ThinkingBudgets`.
+
+Pointer options can be written inline with `new` (Go 1.26+):
+
+```go
+opts := aimix.SimpleStreamOptions{
+	StreamOptions: aimix.StreamOptions{
+		Temperature:       new(0.2),
+		ParallelToolCalls: new(false),
+	},
+	Reasoning: aimix.ThinkingLow,
+}
+```
 
 ### Provider-specific Options
 
