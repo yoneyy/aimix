@@ -149,10 +149,11 @@ func buildResponsesParams(model aimix.Model, tc aimix.TranscriptContext, opts Op
 			if err != nil {
 				return params, err
 			}
+			// The API defaults strict to true, so it is always sent.
 			fn := responses.FunctionToolParam{
 				Name:       t.Name,
 				Parameters: schema,
-				Strict:     openai.Bool(false),
+				Strict:     openai.Bool(t.Strict),
 			}
 			if t.Description != "" {
 				fn.Description = openai.String(t.Description)

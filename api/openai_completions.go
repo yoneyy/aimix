@@ -155,6 +155,9 @@ func buildCompletionsParams(model aimix.Model, tc aimix.TranscriptContext, opts 
 			if t.Description != "" {
 				fn.Description = openai.String(t.Description)
 			}
+			if t.Strict {
+				fn.Strict = openai.Bool(true)
+			}
 			tools = append(tools, openai.ChatCompletionFunctionTool(fn))
 		}
 		params.Tools = tools

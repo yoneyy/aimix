@@ -8,4 +8,9 @@ type Tool struct {
 	Description string `json:"description"`
 	// Parameters is the JSON Schema of the arguments object.
 	Parameters json.RawMessage `json:"parameters"`
+	// Strict asks the API to enforce Parameters exactly (strict mode / structured
+	// outputs). The schema must then follow the provider's strict-mode rules, such
+	// as "additionalProperties": false and every property listed in "required";
+	// otherwise the request is rejected. False leaves validation to the caller.
+	Strict bool `json:"strict,omitempty"`
 }

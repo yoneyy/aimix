@@ -40,6 +40,7 @@ aimix **不做**的事：OAuth 登录、内置模型目录、费用计算、执�
   - [等待最终消息](#等待最终消息)
   - [思考档位](#思考档位)
   - [工具调用](#工具调用)
+    - [严格模式](#严格模式)
   - [图片输入](#图片输入)
   - [多轮对话与切换模型](#多轮对话与切换模型)
   - [请求选项](#请求选项)
@@ -431,6 +432,32 @@ for {
 - `StreamOptions.ToolChoice` 可以设为 `ToolChoiceAuto`、`ToolChoiceNone` 或 `ToolChoiceRequired`。
 - 工具结果可以包含图片（`ImageContent`），各协议会按自己支持的方式发送。
 - 没有结果的工具调用会被自动补一条错误结果（"No result provided"），循环中途被打断也不会产生不合法的对话记录。
+
+#### 严格模式
+
+工具默认是非严格模式：会要求模型按 `Parameters` 生成参数，但不保证完全符合。给工具设置 `Strict: true` 后，由 API 强制参数严格符合 schema：
+
+```go
+weather := aimix.Tool{
+	Name:        "get_weather",
+	Description: "查询某个城市的当前天气",
+	Parameters:  json.RawMessage(`{"type":"object","properties":{"city":{"type":"string"}},"required":["city"],"additionalProperties":false}`),
+	Strict:      true,
+}
+```
+
+| 协议 | `Strict: true` | `Strict: false`（默认） |
+|---|---|---|
+| Anthropic Messages | `strict: true` | 不发送（非严格） |
+| OpenAI Responses | `strict: true` | `strict: false`（显式发送，因为这个 API 默认是严格模式） |
+| OpenAI Chat Completions | `function.strict: true` | 不发送（非严格） |
+
+严格模式的 schema 必须符合厂商的规则：
+- 每个对象都要写 `"additionalProperties": false`。
+- 所有字段都要列进 `required`；可选字段用可为 null 的类型表示，例如 `"type": ["string", "null"]`。
+- 部分关键字不支持。
+
+不符合规则时请求会返回 400，aimix 会以流的 `error` 事件报告。
 
 ### 图片输入
 

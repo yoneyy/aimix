@@ -262,6 +262,9 @@ func convertAnthropicTools(tools []aimix.Tool, cacheControl *anthropic.CacheCont
 		if t.Description != "" {
 			tool.Description = anthropic.String(t.Description)
 		}
+		if t.Strict {
+			tool.Strict = anthropic.Bool(true)
+		}
 		// The cache breakpoint on the last tool covers the whole tool list.
 		if cacheControl != nil && i == len(tools)-1 {
 			tool.CacheControl = *cacheControl

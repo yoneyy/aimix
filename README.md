@@ -37,6 +37,7 @@ What aimix does **not** do: OAuth logins, a built-in model catalog, cost calcula
   - [Waiting for the Final Message](#waiting-for-the-final-message)
   - [Thinking Levels](#thinking-levels)
   - [Tool Calling](#tool-calling)
+    - [Strict Mode](#strict-mode)
   - [Images](#images)
   - [Multi-turn Conversations and Switching Models](#multi-turn-conversations-and-switching-models)
   - [Request Options](#request-options)
@@ -421,6 +422,27 @@ Notes:
 - `StreamOptions.ToolChoice` can be `ToolChoiceAuto`, `ToolChoiceNone` or `ToolChoiceRequired`.
 - Tool results may contain images (`ImageContent`). Each protocol sends them in the form it supports.
 - A tool call left without a result gets an automatic error result ("No result provided"), so an interrupted loop never produces an invalid transcript.
+
+#### Strict Mode
+
+Tools are non-strict by default: the model is asked to follow `Parameters`, but its arguments are not guaranteed to match. Set `Strict: true` on a tool to have the API enforce the schema exactly:
+
+```go
+weather := aimix.Tool{
+	Name:        "get_weather",
+	Description: "Get the current weather for a city",
+	Parameters:  json.RawMessage(`{"type":"object","properties":{"city":{"type":"string"}},"required":["city"],"additionalProperties":false}`),
+	Strict:      true,
+}
+```
+
+| Protocol | `Strict: true` | `Strict: false` (default) |
+|---|---|---|
+| Anthropic Messages | `strict: true` | not sent (non-strict) |
+| OpenAI Responses | `strict: true` | `strict: false` (sent explicitly, because the API defaults to strict) |
+| OpenAI Chat Completions | `function.strict: true` | not sent (non-strict) |
+
+A strict schema must follow the provider's rules. Every object needs `"additionalProperties": false`. Every property must be listed in `required`; express optional fields as nullable, e.g. `"type": ["string", "null"]`. Some keywords are not supported. A schema that breaks these rules makes the request fail with a 400 error, which aimix reports as a stream `error` event.
 
 ### Images
 
