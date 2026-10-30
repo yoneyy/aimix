@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+
+# Go 构建产物
+/bin/
+
+.DS_Store
+
+.idea/
+.vscode/
